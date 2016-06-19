@@ -3,15 +3,10 @@
 
 Vagrant.configure(2) do |config|
   domain = 'orbitalarchives.org'
-
   config.vm.box = 'bento/centos-7.2'
 
   config.vm.provision 'ansible' do |ansible|
     ansible.playbook = 'playbook.yaml'
-    #ansible.groups = {
-    #  'hosts'  => ['host[0:9][0:9]'],
-    #  'router' => ['router']
-    #}
   end 
 
   config.vm.define 'host01' do |host|
