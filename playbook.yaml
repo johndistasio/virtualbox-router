@@ -1,0 +1,57 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: install tcpdump
+      package: name=tcpdump state=present
+    - name: install traceroute
+      package: name=traceroute state=present
+    - name: install nmap
+      package: name=nmap state=present
+
+- hosts: router
+  become: yes
+  tasks:
+    - sysctl: name=net.ipv4.ip_forward value=1 state=present
+    - name: forward 10.0.0.0/24 traffic
+      iptables:
+        chain: FORWARD
+        in_interface: enp0s9
+        out_interface: enp0s8
+        source: '172.16.0.0/24'
+        destination: '10.0.0.0/24'
+        jump: ACCEPT
+    - name: forward 172.16.0.0/24 traffic
+      iptables:
+        chain: FORWARD
+        in_interface: enp0s8
+        out_interface: enp0s9
+        source: '10.0.0.0/24'
+        destination: '172.16.0.0/24'
+        jump: ACCEPT
+
+- hosts: host01
+  become: yes
+  tasks:
+    - name: add routes
+      template:
+        src: templates/route.j2
+        dest: "/etc/sysconfig/network-scripts/route-{{ item.iface }}"
+      with_items:
+        - { iface: enp0s8, gw: '10.0.0.1', dest: '172.16.0.0/24' }
+      notify: restart networking
+  handlers:
+    - include: handlers/handlers.yaml
+
+- hosts: host02
+  become: yes
+  tasks:
+    - name: add routes
+      template:
+        src: templates/route.j2
+        dest: "/etc/sysconfig/network-scripts/route-{{ item.iface }}"
+      with_items:
+        - { iface: enp0s8, gw: '172.16.0.1', dest: '10.0.0.0/24' }
+      notify: restart networking
+  handlers:
+    - include: handlers/handlers.yaml
