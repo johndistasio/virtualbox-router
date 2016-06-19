@@ -12,7 +12,8 @@
 - hosts: router
   become: yes
   tasks:
-    - sysctl: name=net.ipv4.ip_forward value=1 state=present
+    - name: allow ipv4 traffic forwarding
+      sysctl: name=net.ipv4.ip_forward value=1 state=present
     - name: forward 10.0.0.0/24 traffic
       iptables:
         chain: FORWARD
