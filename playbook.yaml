@@ -34,25 +34,11 @@
 - hosts: host01
   become: yes
   tasks:
-    - name: add routes
-      template:
-        src: templates/route.j2
-        dest: "/etc/sysconfig/network-scripts/route-{{ item.iface }}"
-      with_items:
-        - { iface: enp0s8, gw: '10.0.0.1', dest: '172.16.0.0/24' }
-      notify: restart networking
-  handlers:
-    - include: handlers/handlers.yaml
+    - name: add route to 172.16.0.0/24
+      command: ip route add 172.16.0.0/24 via 10.0.0.1 dev enp0s8
 
 - hosts: host02
   become: yes
   tasks:
-    - name: add routes
-      template:
-        src: templates/route.j2
-        dest: "/etc/sysconfig/network-scripts/route-{{ item.iface }}"
-      with_items:
-        - { iface: enp0s8, gw: '172.16.0.1', dest: '10.0.0.0/24' }
-      notify: restart networking
-  handlers:
-    - include: handlers/handlers.yaml
+    - name: add route to 10.0.0.0/24
+      command: ip route add 10.0.0.0/24 via 172.16.0.1 dev enp0s8
